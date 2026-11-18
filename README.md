@@ -1,7 +1,7 @@
 # HEDGE — research artifact
 
 Code, tests, benchmarks and formal model for the paper
-**"HEDGE: An Algorithm-Hedged, Sign-Less Post-Quantum Authenticated Key Exchange and Record Layer for Microcontroller-Class IoT Devices"** (M. Prakash, 2026).
+**"HEDGE: An Algorithm-Hedged, Sign-Less Post-Quantum Authenticated Key Exchange and Record Layer for Microcontroller-Class IoT Devices"** (M. Prakash and A. Pithani, 2026).
 
 Every cryptographic layer pairs two unrelated primitives and stays secure if either survives:
 

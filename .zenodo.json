@@ -7,8 +7,19 @@
       "name": "Prakash, Mangali",
       "affiliation": "SRM University-AP, Amaravati, India",
       "orcid": "0000-0001-8710-6163"
+    },
+    {
+      "name": "Pithani, Ashwini",
+      "affiliation": "SRM University-AP, Amaravati, India"
     }
   ],
   "license": "MIT",
-  "keywords": ["post-quantum cryptography", "authenticated key exchange", "AEAD combiner", "Ascon", "X-Wing", "IoT security"]
+  "keywords": [
+    "post-quantum cryptography",
+    "authenticated key exchange",
+    "AEAD combiner",
+    "Ascon",
+    "X-Wing",
+    "IoT security"
+  ]
 }
