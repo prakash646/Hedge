@@ -1,7 +1,7 @@
 # HEDGE — research artifact
 
 Code, tests, benchmarks and formal model for the paper
-**"HEDGE: An Algorithm-Hedged, Sign-Less Post-Quantum Authenticated Key Exchange and Record Layer for Microcontroller-Class IoT Devices"** (M. Prakash, 2026). Archived on Zenodo: DOI to be added at the first release.
+**"HEDGE: An Algorithm-Hedged, Sign-Less Post-Quantum Authenticated Key Exchange and Record Layer for Microcontroller-Class IoT Devices"** (M. Prakash, 2026).
 
 Every cryptographic layer pairs two unrelated primitives and stays secure if either survives:
 
@@ -159,7 +159,7 @@ tools/fetch_third_party.sh     # clones into third_party/ (not tracked in git)
 
 ## Citing
 
-See `CITATION.cff`. Please cite the paper and, for the artifact itself, the Zenodo record.
+See `CITATION.cff`. Please cite the paper.
 
 ## Third-party code (pinned)
 
