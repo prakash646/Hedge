@@ -1,0 +1,53 @@
+HEDGE measurement on the B-L475E-IOT01A board  (about 10 minutes)
+=================================================================
+
+You need: the board, a micro-USB cable, a Windows PC.
+Optional (energy): a digital multimeter that can measure DC milliamps (mA).
+
+PART A - cycle counts and stack (required)
+------------------------------------------
+1. Plug the micro-USB cable into the connector labelled "USB STLINK"
+   (top edge of the board, right-hand side). Leave the jumpers as they are.
+   LEDs LD5 and LD6 light up, and a new USB drive appears in File Explorer
+   (usually named DIS_L4IOT).
+
+2. Find the board's serial port:
+   Windows Device Manager -> "Ports (COM & LPT)" ->
+   "STMicroelectronics STLink Virtual COM Port (COMx)". Note the COM number.
+
+3. Open a serial terminal on that port BEFORE copying the file:
+   PuTTY: Connection type = Serial, Serial line = COMx, Speed = 115200, then Open.
+   (Tera Term or the Arduino IDE Serial Monitor at 115200 baud also work.)
+
+4. Drag hedge_stm32l475.bin (or _fast.bin / _asm.bin, see README 2a) onto the DIS_L4IOT drive.
+   The board flashes itself and restarts. Text starts in the terminal within a
+   few seconds. Check that it says:
+       self-test (X-Wing vector + full handshake): PASS
+   The full benchmark takes about 1-2 minutes and ends with "=== benchmark done ===".
+   The complete report is printed again every ~20 s, so nothing is lost if you
+   opened the terminal late.
+
+5. Copy all terminal text (PuTTY: right-click the title bar -> "Copy All to
+   Clipboard"), paste it into a .txt file and send it to Claude.
+
+PART B - energy (optional, needs a multimeter)
+----------------------------------------------
+After the benchmark the terminal repeats, every ~20 s:
+   ">>> NOW RUNNING HANDSHAKES for ~10 s -- read the current now"
+   ">>> NOW IDLE for ~10 s -- read the current now"
+
+6. Unplug the USB cable first.
+7. Turn the board over. Find the 2-pin jumper labelled "IDD" (JP5).
+   Remove the jumper cap and keep it safe.
+8. Set the multimeter to DC current, mA range, with the red lead in the mA jack.
+   Hold or clip one probe on each of the two IDD pins.
+   IMPORTANT: without the multimeter (or the jumper) on these pins the
+   microcontroller has no power and will not run.
+9. Plug the USB cable back in. The board restarts and repeats Part A automatically.
+10. During each ">>> NOW RUNNING HANDSHAKES" window, note the mA reading.
+    During each ">>> NOW IDLE" window, note the mA reading.
+    Write down 3 readings of each.
+11. Unplug USB, put the IDD jumper cap back, done.
+
+Send Claude: the terminal text file, plus (if done) the 3 + 3 current readings
+and the multimeter model.

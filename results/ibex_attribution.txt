@@ -1,0 +1,37 @@
+
+HEDGE on Ibex RV32IMC (small config), Verilator RTL simulation
+self-test (X-Wing vector + full handshake): PASS
+--- ablation: KEM layer (X-Wing = ML-KEM-768 + X25519 + SHA3-256 combiner) ---
+ML-KEM-768 KeyGen                     2444704 cycles  (median of 3; min 2444704, max 2444704)
+ML-KEM-768 Encaps                     2654014 cycles  (median of 3; min 2654014, max 2654014)
+ML-KEM-768 Decaps                     3226484 cycles  (median of 3; min 3226484, max 3226484)
+X25519 public key (fixed base)        4057790 cycles  (median of 3; min 4057790, max 4057790)
+X25519 shared secret (var. base)      4057859 cycles  (median of 3; min 4057859, max 4057859)
+--- ablation: transcript hash, 1256-byte input ---
+SHAKE256 only (32 B out)              1266879 cycles  (median of 11; min 1266879, max 1266879)
+Ascon-Hash256 only                     294227 cycles  (median of 11; min 294227, max 294227)
+H* = SHAKE256 || Ascon-Hash256        1582593 cycles  (median of 11; min 1582593, max 1582593)
+--- ablation: KDF, 32-byte output, 134-byte input ---
+SHAKE256 only                          127719 cycles  (median of 11; min 127719, max 127719)
+Ascon-CXOF128 only                      44065 cycles  (median of 11; min 44065, max 44065)
+KDF = SHAKE256 xor Ascon-CXOF128       305340 cycles  (median of 11; min 305340, max 305340)
+--- ablation: record layer, 64-byte message, 16-byte AD ---
+Ascon-AEAD128 decrypt only              14519 cycles  (median of 11; min 14519, max 14519)
+Romulus-N decrypt only                  64073 cycles  (median of 11; min 64073, max 64073)
+--- attribution: device respond + finish, mean of 5 runs (wrapper overhead included) ---
+device total (respond+finish)                      15046152 cycles
+  X-Wing Encaps  TOTAL          1 calls   10899453 cycles
+  X-Wing Encaps  ML-KEM-768     1 calls    2654898 cycles
+  X-Wing Encaps  X25519         2 calls    8115581 cycles
+  X-Wing Encaps  Keccak/SHA3    7 calls     127761 cycles
+  H*             TOTAL          2 calls    3024646 cycles
+  H*             Keccak/SHA3   11 calls    2408013 cycles
+  H*             Ascon          2 calls     573842 cycles
+  KDF            TOTAL          5 calls    1014153 cycles
+  KDF            Keccak/SHA3   20 calls     762417 cycles
+  KDF            Ascon          5 calls     208032 cycles
+  Comb.Enc       TOTAL          1 calls      97773 cycles
+  Comb.Enc       Ascon          1 calls      15428 cycles
+  Comb.Enc       Romulus-N      1 calls      75826 cycles
+(ablation sink 0)
+done.

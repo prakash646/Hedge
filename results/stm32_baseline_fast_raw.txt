@@ -1,0 +1,252 @@
+HEDGE STM32 run started 2026-11-01 15:19:46
+Board drive: D:
+  found port: USB Serial Device (COM3)  [USB\VID_0483&PID_374B&MI_02\6&95EA3DD&0&0002]
+Serial port: COM3  (USB Serial Device (COM3))
+Flashing firmware (copy to board drive)...
+Flash copy done. Opening serial port...
+
+=== HEDGE on STM32L475VG (B-L475E-IOT01A, Cortex-M4) ===
+SYSCLK = 80000000 Hz, flash 4 WS, ART I/D-cache + prefetch on, gcc -O2
+build variant: UNHEDGED BASELINE (ML-KEM-768 + Ascon only), Ascon assembly
+self-test (X-Wing vector + full handshake): PASS
+known-answer tests (Ascon-AEAD128, Romulus-N, Ascon-Hash256): PASS
+--- record layer (64-byte message, 16-byte AD) ---
+Ascon-AEAD128 encrypt                     14230 cycles  (median of 201; min 14230, max 14246)
+Romulus-N encrypt                         67455 cycles  (mDevice finish (verify tau_G + keys)       118029 cycles  (median of 21; min 118029, max 118029)
+Gateway respond (keygen + th2)          2088081 cycles  (median of 21; min 2087628, max 2118616)
+Gateway finish (decaps + verify)        4565411 cycles  (median of 21; min 4564555, max 4814694)
+(status sink 0: 0 means every call succeeded)
+--- peak stack (stack painting) ---
+Comb.Enc 64 B                           324 bytes peak stack
+X-Wing Encaps                         17868 bytes peak stack
+Device respond                        18188 bytes peak stack
+Device finish                           928 bytes peak stack
+--- ablation: KEM layer (X-Wing = ML-KEM-768 + X25519 + SHA3-256 combiner) ---
+ML-KEM-768 KeyGen                     1717405 cycles  (median of 21; min 1717405, max 1717469)
+ML-KEM-768 Encaps                     1828536 cycles  (median of 21; min 1828536, max 1828604)
+ML-KEM-768 Decaps                     2231044 cycles  (median of 21; min 2231044, max 2231101)
+X25519 public key (fixed base)        2329371 cycles  (median of 21; min 2329371, max 2329401)
+X25519 shared secret (var. base)      2329320 cycles  (median of 21; min 2329320, max 2329368)
+--- ablation: transcript hash, 1256-byte input ---
+SHAKE256 only (32 B out)               671139 cycles  (median of 201; min 671139, max 671144)
+Ascon-Hash256 only                     358500 cycles  (median of 201; min 358500, max 358541)
+H* = SHAKE256 || Ascon-Hash256         365763 cycles  (median of 201; min 365763, max 365811)
+--- ablation: KDF, 32-byte output, 134-byte input ---
+SHAKE256 only                           68347 cycles  (median of 201; min 68347, max 68362)
+Ascon-CXOF128 only                      65223 cycles  (median of 201; min 65223, max 65245)
+KDF = SHAKE256 xor Ascon-CXOF128        67036 cycles  (median of 201; min 67036, max 67064)
+--- ablation: record layer, 64-byte message, 16-byte AD ---
+Ascon-AEAD128 decrypt only              14222 cycles  (median of 201; min 14218, max 14222)
+Romulus-N decrypt only                  68210 cycles  (median of 201; min 68202, max 68210)
+--- attribution: device respond + finish, mean of 5 runs (wrapper overhead included) ---
+device total (respond+finish)                       2816640 cycles
+  X-Wing Encaps  TOTAL          1 calls    1853462 cycles
+  X-Wing Encaps  ML-KEM-768     1 calls    1853319 cycles
+  H*             TOTAL          2 calls     686319 cycles
+  H*             Ascon          2 calls     672450 cycles
+  KDF            TOTAL          5 calls     260995 cycles
+  KDF            Ascon          5 calls     251852 cycles
+  Comb.Enc       TOTAL          1 calls      11264 cycles
+  Comb.Enc       Ascon          1 calls      11094 cycles
+(ablation sink 0)
+=== benchmark done ===
+
+######## FULL REPORT (repeated every ~20 s) ########
+
+=== HEDGE on STM32L475VG (B-L475E-IOT01A, Cortex-M4) ===
+SYSCLK = 80000000 Hz, flash 4 WS, ART I/D-cache + prefetch on, gcc -O2
+build variant: UNHEDGED BASELINE (ML-KEM-768 + Ascon only), Ascon assembly
+self-test (X-Wing vector + full handshake): PASS
+known-answer tests (Ascon-AEAD128, Romulus-N, Ascon-Hash256): PASS
+--- record layer (64-byte message, 16-byte AD) ---
+Ascon-AEAD128 encrypt                     14230 cycles  (median of 201; min 14230, max 14246)
+Romulus-N encrypt                         67455 cycles  (median of 201; min 67455, max 67499)
+Comb.Enc                                  14344 cycles  (median of 201; min 14344, max 14376)
+Comb.Dec (valid)                          14263 cycles  (median of 201; min 14263, max 14265)
+Comb.Dec (forged, early reject)           14428 cycles  (median of 201; min 14428, max 14430)
+--- hash / KDF combiners ---
+KDF, 32-byte output                       67035 cycles  (median of 201; min 67035, max 67073)
+KDF, 96-byte output                       78162 cycles  (median of 201; min 78162, max 78196)
+H*, 1256-byte input                      365765 cycles  (median of 201; min 365765, max 365815)
+--- X-Wing (ML-KEM-768 + X25519) ---
+X-Wing KeyGen (gateway)                 1730954 cycles  (median of 21; min 1730674, max 1855784)
+X-Wing Encaps (device)                  1829610 cycles  (median of 21; min 1829610, max 1829612)
+X-Wing Decaps (gateway)                 3960721 cycles  (median of 21; min 3960721, max 3960779)
+--- full handshake ---
+Device respond (encaps + KDFs + C3)      2672486 cycles  (median of 21; min 2672190, max 2672898)
+Device finish (verify tau_G + keys)       118029 cycles  (median of 21; min 118029, max 118029)
+Gateway respond (keygen + th2)          2088081 cycles  (median of 21; min 2087628, max 2118616)
+Gateway finish (decaps + verify)        4565411 cycles  (median of 21; min 4564555, max 4814694)
+(status sink 0: 0 means every call succeeded)
+--- peak stack (stack painting) ---
+Comb.Enc 64 B                           324 bytes peak stack
+X-Wing Encaps                         17868 bytes peak stack
+Device respond                        18188 bytes peak stack
+Device finish                           928 bytes peak stack
+--- ablation: KEM layer (X-Wing = ML-KEM-768 + X25519 + SHA3-256 combiner) ---
+ML-KEM-768 KeyGen                     1717405 cycles  (median of 21; min 1717405, max 1717469)
+ML-KEM-768 Encaps                     1828536 cycles  (median of 21; min 1828536, max 1828604)
+ML-KEM-768 Decaps                     2231044 cycles  (median of 21; min 2231044, max 2231101)
+X25519 public key (fixed base)        2329371 cycles  (median of 21; min 2329371, max 2329401)
+X25519 shared secret (var. base)      2329320 cycles  (median of 21; min 2329320, max 2329368)
+--- ablation: transcript hash, 1256-byte input ---
+SHAKE256 only (32 B out)               671139 cycles  (median of 201; min 671139, max 671144)
+Ascon-Hash256 only                     358500 cycles  (median of 201; min 358500, max 358541)
+H* = SHAKE256 || Ascon-Hash256         365763 cycles  (median of 201; min 365763, max 365811)
+--- ablation: KDF, 32-byte output, 134-byte input ---
+SHAKE256 only                           68347 cycles  (median of 201; min 68347, max 68362)
+Ascon-CXOF128 only                      65223 cycles  (median of 201; min 65223, max 65245)
+KDF = SHAKE256 xor Ascon-CXOF128        67036 cycles  (median of 201; min 67036, max 67064)
+--- ablation: record layer, 64-byte message, 16-byte AD ---
+Ascon-AEAD128 decrypt only              14222 cycles  (median of 201; min 14218, max 14222)
+Romulus-N decrypt only                  68210 cycles  (median of 201; min 68202, max 68210)
+--- attribution: device respond + finish, mean of 5 runs (wrapper overhead included) ---
+device total (respond+finish)                       2816640 cycles
+  X-Wing Encaps  TOTAL          1 calls    1853462 cycles
+  X-Wing Encaps  ML-KEM-768     1 calls    1853319 cycles
+  H*             TOTAL          2 calls     686319 cycles
+  H*             Ascon          2 calls     672450 cycles
+  KDF            TOTAL          5 calls     260995 cycles
+  KDF            Ascon          5 calls     251852 cycles
+  Comb.Enc       TOTAL          1 calls      11264 cycles
+  Comb.Enc       Ascon          1 calls      11094 cycles
+(ablation sink 0)
+=== benchmark done ===
+######## ENERGY PHASE: measure current at the IDD jumper ########
+>>> [round 1] NOW RUNNING HANDSHAKES for ~10 s -- read the current now
+    [round 1] done: 300 device handshakes (respond step), avg 2672333 cycles each
+>>> [round 1] NOW IDLE for ~10 s -- read the current now
+
+######## FULL REPORT (repeated every ~20 s) ########
+
+=== HEDGE on STM32L475VG (B-L475E-IOT01A, Cortex-M4) ===
+SYSCLK = 80000000 Hz, flash 4 WS, ART I/D-cache + prefetch on, gcc -O2
+build variant: UNHEDGED BASELINE (ML-KEM-768 + Ascon only), Ascon assembly
+self-test (X-Wing vector + full handshake): PASS
+known-answer tests (Ascon-AEAD128, Romulus-N, Ascon-Hash256): PASS
+--- record layer (64-byte message, 16-byte AD) ---
+Ascon-AEAD128 encrypt                     14230 cycles  (median of 201; min 14230, max 14246)
+Romulus-N encrypt                         67455 cycles  (median of 201; min 67455, max 67499)
+Comb.Enc                                  14344 cycles  (median of 201; min 14344, max 14376)
+Comb.Dec (valid)                          14263 cycles  (median of 201; min 14263, max 14265)
+Comb.Dec (forged, early reject)           14428 cycles  (median of 201; min 14428, max 14430)
+--- hash / KDF combiners ---
+KDF, 32-byte output                       67035 cycles  (median of 201; min 67035, max 67073)
+KDF, 96-byte output                       78162 cycles  (median of 201; min 78162, max 78196)
+H*, 1256-byte input                      365765 cycles  (median of 201; min 365765, max 365815)
+--- X-Wing (ML-KEM-768 + X25519) ---
+X-Wing KeyGen (gateway)                 1730954 cycles  (median of 21; min 1730674, max 1855784)
+X-Wing Encaps (device)                  1829610 cycles  (median of 21; min 1829610, max 1829612)
+X-Wing Decaps (gateway)                 3960721 cycles  (median of 21; min 3960721, max 3960779)
+--- full handshake ---
+Device respond (encaps + KDFs + C3)      2672486 cycles  (median of 21; min 2672190, max 2672898)
+Device finish (verify tau_G + keys)       118029 cycles  (median of 21; min 118029, max 118029)
+Gateway respond (keygen + th2)          2088081 cycles  (median of 21; min 2087628, max 2118616)
+Gateway finish (decaps + verify)        4565411 cycles  (median of 21; min 4564555, max 4814694)
+(status sink 0: 0 means every call succeeded)
+--- peak stack (stack painting) ---
+Comb.Enc 64 B                           324 bytes peak stack
+X-Wing Encaps                         17868 bytes peak stack
+Device respond                        18188 bytes peak stack
+Device finish                           928 bytes peak stack
+--- ablation: KEM layer (X-Wing = ML-KEM-768 + X25519 + SHA3-256 combiner) ---
+ML-KEM-768 KeyGen                     1717405 cycles  (median of 21; min 1717405, max 1717469)
+ML-KEM-768 Encaps                     1828536 cycles  (median of 21; min 1828536, max 1828604)
+ML-KEM-768 Decaps                     2231044 cycles  (median of 21; min 2231044, max 2231101)
+X25519 public key (fixed base)        2329371 cycles  (median of 21; min 2329371, max 2329401)
+X25519 shared secret (var. base)      2329320 cycles  (median of 21; min 2329320, max 2329368)
+--- ablation: transcript hash, 1256-byte input ---
+SHAKE256 only (32 B out)               671139 cycles  (median of 201; min 671139, max 671144)
+Ascon-Hash256 only                     358500 cycles  (median of 201; min 358500, max 358541)
+H* = SHAKE256 || Ascon-Hash256         365763 cycles  (median of 201; min 365763, max 365811)
+--- ablation: KDF, 32-byte output, 134-byte input ---
+SHAKE256 only                           68347 cycles  (median of 201; min 68347, max 68362)
+Ascon-CXOF128 only                      65223 cycles  (median of 201; min 65223, max 65245)
+KDF = SHAKE256 xor Ascon-CXOF128        67036 cycles  (median of 201; min 67036, max 67064)
+--- ablation: record layer, 64-byte message, 16-byte AD ---
+Ascon-AEAD128 decrypt only              14222 cycles  (median of 201; min 14218, max 14222)
+Romulus-N decrypt only                  68210 cycles  (median of 201; min 68202, max 68210)
+--- attribution: device respond + finish, mean of 5 runs (wrapper overhead included) ---
+device total (respond+finish)                       2816640 cycles
+  X-Wing Encaps  TOTAL          1 calls    1853462 cycles
+  X-Wing Encaps  ML-KEM-768     1 calls    1853319 cycles
+  H*             TOTAL          2 calls     686319 cycles
+  H*             Ascon          2 calls     672450 cycles
+  KDF            TOTAL          5 calls     260995 cycles
+  KDF            Ascon          5 calls     251852 cycles
+  Comb.Enc       TOTAL          1 calls      11264 cycles
+  Comb.Enc       Ascon          1 calls      11094 cycles
+(ablation sink 0)
+=== benchmark done ===
+######## ENERGY PHASE: measure current at the IDD jumper ########
+>>> [round 2] NOW RUNNING HANDSHAKES for ~10 s -- read the current now
+    [round 2] done: 300 device handshakes (respond step), avg 2672333 cycles each
+>>> [round 2] NOW IDLE for ~10 s -- read the current now
+
+######## FULL REPORT (repeated every ~20 s) ########
+
+=== HEDGE on STM32L475VG (B-L475E-IOT01A, Cortex-M4) ===
+SYSCLK = 80000000 Hz, flash 4 WS, ART I/D-cache + prefetch on, gcc -O2
+build variant: UNHEDGED BASELINE (ML-KEM-768 + Ascon only), Ascon assembly
+self-test (X-Wing vector + full handshake): PASS
+known-answer tests (Ascon-AEAD128, Romulus-N, Ascon-Hash256): PASS
+--- record layer (64-byte message, 16-byte AD) ---
+Ascon-AEAD128 encrypt                     14230 cycles  (median of 201; min 14230, max 14246)
+Romulus-N encrypt                         67455 cycles  (median of 201; min 67455, max 67499)
+Comb.Enc                                  14344 cycles  (median of 201; min 14344, max 14376)
+Comb.Dec (valid)                          14263 cycles  (median of 201; min 14263, max 14265)
+Comb.Dec (forged, early reject)           14428 cycles  (median of 201; min 14428, max 14430)
+--- hash / KDF combiners ---
+KDF, 32-byte output                       67035 cycles  (median of 201; min 67035, max 67073)
+KDF, 96-byte output                       78162 cycles  (median of 201; min 78162, max 78196)
+H*, 1256-byte input                      365765 cycles  (median of 201; min 365765, max 365815)
+--- X-Wing (ML-KEM-768 + X25519) ---
+X-Wing KeyGen (gateway)                 1730954 cycles  (median of 21; min 1730674, max 1855784)
+X-Wing Encaps (device)                  1829610 cycles  (median of 21; min 1829610, max 1829612)
+X-Wing Decaps (gateway)                 3960721 cycles  (median of 21; min 3960721, max 3960779)
+--- full handshake ---
+Device respond (encaps + KDFs + C3)      2672486 cycles  (median of 21; min 2672190, max 2672898)
+Device finish (verify tau_G + keys)       118029 cycles  (median of 21; min 118029, max 118029)
+Gateway respond (keygen + th2)          2088081 cycles  (median of 21; min 2087628, max 2118616)
+Gateway finish (decaps + verify)        4565411 cycles  (median of 21; min 4564555, max 4814694)
+(status sink 0: 0 means every call succeeded)
+--- peak stack (stack painting) ---
+Comb.Enc 64 B                           324 bytes peak stack
+X-Wing Encaps                         17868 bytes peak stack
+Device respond                        18188 bytes peak stack
+Device finish                           928 bytes peak stack
+--- ablation: KEM layer (X-Wing = ML-KEM-768 + X25519 + SHA3-256 combiner) ---
+ML-KEM-768 KeyGen                     1717405 cycles  (median of 21; min 1717405, max 1717469)
+ML-KEM-768 Encaps                     1828536 cycles  (median of 21; min 1828536, max 1828604)
+ML-KEM-768 Decaps                     2231044 cycles  (median of 21; min 2231044, max 2231101)
+X25519 public key (fixed base)        2329371 cycles  (median of 21; min 2329371, max 2329401)
+X25519 shared secret (var. base)      2329320 cycles  (median of 21; min 2329320, max 2329368)
+--- ablation: transcript hash, 1256-byte input ---
+SHAKE256 only (32 B out)               671139 cycles  (median of 201; min 671139, max 671144)
+Ascon-Hash256 only                     358500 cycles  (median of 201; min 358500, max 358541)
+H* = SHAKE256 || Ascon-Hash256         365763 cycles  (median of 201; min 365763, max 365811)
+--- ablation: KDF, 32-byte output, 134-byte input ---
+SHAKE256 only                           68347 cycles  (median of 201; min 68347, max 68362)
+Ascon-CXOF128 only                      65223 cycles  (median of 201; min 65223, max 65245)
+KDF = SHAKE256 xor Ascon-CXOF128        67036 cycles  (median of 201; min 67036, max 67064)
+--- ablation: record layer, 64-byte message, 16-byte AD ---
+Ascon-AEAD128 decrypt only              14222 cycles  (median of 201; min 14218, max 14222)
+Romulus-N decrypt only                  68210 cycles  (median of 201; min 68202, max 68210)
+--- attribution: device respond + finish, mean of 5 runs (wrapper overhead included) ---
+device total (respond+finish)                       2816640 cycles
+  X-Wing Encaps  TOTAL          1 calls    1853462 cycles
+  X-Wing Encaps  ML-KEM-768     1 calls    1853319 cycles
+  H*             TOTAL          2 calls     686319 cycles
+  H*             Ascon          2 calls     672450 cycles
+  KDF            TOTAL          5 calls     260995 cycles
+  KDF            Ascon          5 calls     251852 cycles
+  Comb.Enc       TOTAL          1 calls      11264 cycles
+  Comb.Enc       Ascon          1 calls      11094 cycles
+(ablation sink 0)
+=== benchmark done ===
+######## ENERGY PHASE: measure current at the IDD jumper ########
+>>> [round 3] NOW RUNNING HANDSHAKES for ~10 s -- read the current now
+
+RESULT: self-test PASS
+RESULT: known-answer tests PASS
+Finished 2026-11-01 15:20:55. Output saved to the log file.

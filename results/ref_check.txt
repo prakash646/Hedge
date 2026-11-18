@@ -1,0 +1,6 @@
+  hstar        match
+  kdf_ms_32    match
+  kdf_app_96   match
+  kdf_finD_16  match
+  comb_outer   match (pyascon opens the outer Ascon layer)
+REFCHECK: all match

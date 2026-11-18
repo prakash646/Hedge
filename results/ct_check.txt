@@ -1,0 +1,24 @@
+=== gcc -O2, hedged ===
+ct_check: 3 handshakes, 4 records sealed/opened/forged per handshake; see Valgrind summary
+ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+=== gcc -O2, unhedged ===
+ct_check: 3 handshakes, 4 records sealed/opened/forged per handshake; see Valgrind summary
+ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+=== gcc -Os, hedged ===
+ct_check: 3 handshakes, 4 records sealed/opened/forged per handshake; see Valgrind summary
+ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+=== gcc -Os, unhedged ===
+ct_check: 3 handshakes, 4 records sealed/opened/forged per handshake; see Valgrind summary
+ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+=== gcc -O3, hedged ===
+ct_check: 3 handshakes, 4 records sealed/opened/forged per handshake; see Valgrind summary
+ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+=== gcc -O3, unhedged ===
+ct_check: 3 handshakes, 4 records sealed/opened/forged per handshake; see Valgrind summary
+ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+=== positive control (gcc -O2, deliberate leak) ===
+ERROR SUMMARY: 3 errors from 1 contexts (suppressed: 0 from 0)
+Conditional jump or move depends on uninitialised value(s)
+   at 0x10A138: leaky_compare.constprop.0 (ct_check.c:50)
+   by 0x109EA9: main (ct_check.c:87)
+

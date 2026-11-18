@@ -1,0 +1,9 @@
+
+HEDGE on Ibex RV32IMC (small config), Verilator RTL simulation
+self-test (X-Wing vector + full handshake): PASS
+--- peak stack (stack painting) ---
+Comb.Enc 64 B                          2272 bytes peak stack
+X-Wing Encaps                         18052 bytes peak stack
+Device respond                        18340 bytes peak stack
+Device finish                          1768 bytes peak stack
+done.

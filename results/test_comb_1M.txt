@@ -1,0 +1,7 @@
+Record-layer tests
+  correctness: 1806 (length, AD) cases
+  rejection: 836/836 tampered inputs rejected
+  tidiness Ascon-AEAD128  trials=1000000  valid accepted+re-encrypted=1000000  mutated=1000000 accepted=0  violations=0
+  tidiness Romulus-N      trials=1000000  valid accepted+re-encrypted=1000000  mutated=1000000 accepted=0  violations=0
+  tidiness Comb           trials=1000000  valid accepted+re-encrypted=1000000  mutated=1000000 accepted=0  violations=0
+COMB: all passed

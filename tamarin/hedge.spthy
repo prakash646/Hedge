@@ -1,0 +1,237 @@
+theory HEDGE
+begin
+
+/*
+ * Symbolic model of the HEDGE handshake and record layer (paper Fig. 2, Table II).
+ *
+ * Primitives
+ *   - ML-KEM component : KEM with  mdec(sk, menc(k, mpk(sk))) = k
+ *   - X25519 component : Tamarin's built-in Diffie-Hellman
+ *   - X-Wing secret    : ss = h(<kM, ssX, ctX, pkX>)          (combiner of the draft)
+ *   - KDF, H*          : ideal functions kdf/3, h/1
+ *   - Comb record layer: nested authenticated encryption
+ *                        C = senc( senc(m, <kIn, n, ad>), <kOut, n, ad> )
+ *                        (outer = Ascon-AEAD128, inner = Romulus-N)
+ *
+ * Algorithm-failure ("break") rules
+ *   BreakMLKEM / BreakDH          : every ML-KEM / X25519 secret of every session leaks
+ *   BreakAscon / BreakRomulus     : for every outer / inner encryption, the complete
+ *                                   (key, nonce, AD) tuple leaks, i.e. the cipher offers
+ *                                   no protection at all. (Leaking only the key would be
+ *                                   too weak: the handshake nonce iv_hs is itself secret.)
+ * Lemmas state exactly which combination of breaks and key reveals each property tolerates.
+ *
+ * Modelling simplifications (see artifact README):
+ *   - KEM ciphertexts are matched structurally (no implicit-rejection modelling);
+ *   - the KEM uses the idealised equation above, not the binding-aware library of Dax et al.;
+ *   - KDF and hash are ideal, so KDF/hash hedging is covered by the computational proof only.
+ */
+
+builtins: diffie-hellman, symmetric-encryption, hashing
+functions: mpk/1, menc/2, mdec/2, kdf/3
+equations: mdec(sk, menc(k, mpk(sk))) = k
+
+/* ---------------- algorithm failures ---------------- */
+rule BreakMLKEM:   [] --[ BrokeMLKEM() ]->   [ !Broken('MLKEM') ]
+rule BreakDH:      [] --[ BrokeDH() ]->      [ !Broken('DH') ]
+rule BreakAscon:   [] --[ BrokeAscon() ]->   [ !Broken('ASCON') ]
+rule BreakRomulus: [] --[ BrokeRomulus() ]-> [ !Broken('ROMULUS') ]
+
+rule LeakMLKEM:   [ !Broken('MLKEM'),   !MLKEMSecret(k) ] --> [ Out(k) ]
+rule LeakDH:      [ !Broken('DH'),      !DHSecret(x) ]    --> [ Out(x) ]
+rule LeakAscon:   [ !Broken('ASCON'),   !AsconKey(k) ]    --> [ Out(k) ]
+rule LeakRomulus: [ !Broken('ROMULUS'), !RomulusKey(k) ]  --> [ Out(k) ]
+
+/* ---------------- enrollment and corruption ---------------- */
+rule Enroll:
+    [ Fr(~kd), Fr(~id) ]
+  --[ Enrolled(~id, $G, ~kd) ]->
+    [ !DevKey(~id, $G, ~kd), !GwKey($G, ~id, ~kd) ]
+
+rule Reveal_KD:
+    [ !DevKey(id, G, kd) ] --[ RevealKD(id) ]-> [ Out(kd) ]
+
+/* ---------------- handshake ---------------- */
+rule D1_Start:
+    [ !DevKey(id, G, kd), Fr(~nD) ]
+  -->
+    [ D_St1(id, G, kd, ~nD), Out(~nD) ]
+
+rule G2_Respond:
+  let ek  = <mpk(~skM), 'g'^~skX>
+      m2  = <~nG, $G, ek>
+      th2 = h(<nD, m2>)
+  in
+    [ In(nD), Fr(~nG), Fr(~skM), Fr(~skX) ]
+  --[ GwGenEK(ek) ]->
+    [ G_St2($G, nD, ~nG, ~skM, ~skX, th2), !DHSecret(~skX), Out(m2) ]
+
+rule D3_Encaps:
+  let m2   = <nG, gid, <pkM, pkX>>
+      th2  = h(<nD, m2>)
+      ctM  = menc(~kM, pkM)
+      ctX  = 'g'^~ex
+      ssX  = pkX^~ex
+      ss   = h(<~kM, ssX, ctX, pkX>)
+      ct   = <ctM, ctX>
+      kOut = kdf(ss, 'hsOut', th2)
+      kIn  = kdf(ss, 'hsIn',  th2)
+      iv   = kdf(ss, 'hsIv',  th2)
+      th3  = h(<th2, ct, id>)
+      ms   = kdf(<ss, kd>, 'ms', th3)
+      tauD = kdf(ms, 'finD', th3)
+      sk   = kdf(ms, 'app', <th3, tauD>)
+      c3   = senc(senc(<id, tauD>, <kIn, iv, th2>), <kOut, iv, th2>)
+  in
+    [ D_St1(id, G, kd, nD), In(m2), Fr(~kM), Fr(~ex) ]
+  --[ DevUsedEK(id, <pkM, pkX>), DevRunning(id, G, sk, th3) ]->
+    [ D_St3(id, G, ms, th3, tauD, sk),
+      !MLKEMSecret(~kM), !DHSecret(~ex),
+      !AsconKey(<kOut, iv, th2>), !RomulusKey(<kIn, iv, th2>),
+      Out(<ct, c3>) ]
+
+rule G4_Finish:
+  let pkX  = 'g'^skX
+      ss   = h(<kM, ctX^skX, ctX, pkX>)
+      ct   = <menc(kM, mpk(skM)), ctX>
+      kOut = kdf(ss, 'hsOut', th2)
+      kIn  = kdf(ss, 'hsIn',  th2)
+      iv   = kdf(ss, 'hsIv',  th2)
+      th3  = h(<th2, ct, id>)
+      ms   = kdf(<ss, kd>, 'ms', th3)
+      tauD = kdf(ms, 'finD', th3)
+      tauG = kdf(ms, 'finG', <th3, tauD>)
+      sk   = kdf(ms, 'app', <th3, tauD>)
+  in
+    [ G_St2(G, nD, nG, skM, skX, th2), !GwKey(G, id, kd),
+      In(<ct, senc(senc(<id, tauD>, <kIn, iv, th2>), <kOut, iv, th2>)>) ]
+  --[ GwAccept(G, id, sk, th3) ]->
+    [ G_Keys(G, id, sk), Out(tauG) ]
+
+rule D5_Finish:
+    [ D_St3(id, G, ms, th3, tauD, sk), In(kdf(ms, 'finG', <th3, tauD>)) ]
+  --[ DevAccept(id, G, sk, th3) ]->
+    [ D_Keys(id, G, sk) ]
+
+/* ---------------- one application record, device -> gateway ---------------- */
+rule D6_SendRecord:
+  let kOut = kdf(sk, 'appOut', 'dg')
+      kIn  = kdf(sk, 'appIn',  'dg')
+      rec  = senc(senc(~data, <kIn, 'n0', 'ad'>), <kOut, 'n0', 'ad'>)
+  in
+    [ D_Keys(id, G, sk), Fr(~data) ]
+  --[ DevSentData(id, G, ~data) ]->
+    [ !AsconKey(<kOut, 'n0', 'ad'>), !RomulusKey(<kIn, 'n0', 'ad'>), Out(rec) ]
+
+rule G7_RecvRecord:
+  let kOut = kdf(sk, 'appOut', 'dg')
+      kIn  = kdf(sk, 'appIn',  'dg')
+  in
+    [ G_Keys(G, id, sk), In(senc(senc(data, <kIn, 'n0', 'ad'>), <kOut, 'n0', 'ad'>)) ]
+  --[ GwRecvData(G, id, data) ]->
+    []
+
+/* ======================= lemmas ======================= */
+
+/* L1: an honest run completes (no breaks, no reveals) */
+lemma executable:
+  exists-trace
+  "Ex id G sk th3 #i #j. GwAccept(G, id, sk, th3) @ #i & DevAccept(id, G, sk, th3) @ #j
+     & not (Ex x #r. RevealKD(x) @ #r)
+     & not (Ex #b. BrokeMLKEM() @ #b) & not (Ex #b. BrokeDH() @ #b)
+     & not (Ex #b. BrokeAscon() @ #b) & not (Ex #b. BrokeRomulus() @ #b)"
+
+/* L2: session-key secrecy with forward secrecy, PSK fallback and KEM hedging, device view.
+   The key stays secret unless K_D was revealed BEFORE acceptance, or K_D was revealed
+   at any time AND both KEM components are broken. */
+lemma session_key_secrecy_device [reuse]:
+  "All id G sk th3 #i #k. DevAccept(id, G, sk, th3) @ #i & K(sk) @ #k ==>
+     (Ex #r. RevealKD(id) @ #r & #r < #i)
+   | ((Ex #r. RevealKD(id) @ #r) & (Ex #a. BrokeMLKEM() @ #a) & (Ex #b. BrokeDH() @ #b))"
+
+/* L2': same property, gateway view */
+lemma session_key_secrecy_gateway [reuse]:
+  "All id G sk th3 #i #k. GwAccept(G, id, sk, th3) @ #i & K(sk) @ #k ==>
+     (Ex #r. RevealKD(id) @ #r & #r < #i)
+   | ((Ex #r. RevealKD(id) @ #r) & (Ex #a. BrokeMLKEM() @ #a) & (Ex #b. BrokeDH() @ #b))"
+
+/* L3: injective agreement, device accepts => unique gateway partner with same key */
+lemma agreement_gateway_to_device:
+  "All id G sk th3 #i. DevAccept(id, G, sk, th3) @ #i ==>
+     (Ex #j. GwAccept(G, id, sk, th3) @ #j & #j < #i
+        & not (Ex id2 G2 sk2 #i2. DevAccept(id2, G2, sk2, th3) @ #i2 & not (#i2 = #i)))
+   | (Ex #r. RevealKD(id) @ #r & #r < #i)"
+
+/* L4: injective agreement, gateway accepts => unique device run with same key */
+lemma agreement_device_to_gateway:
+  "All id G sk th3 #i. GwAccept(G, id, sk, th3) @ #i ==>
+     (Ex #j. DevRunning(id, G, sk, th3) @ #j & #j < #i
+        & not (Ex G2 id2 sk2 #i2. GwAccept(G2, id2, sk2, th3) @ #i2 & not (#i2 = #i)))
+   | (Ex #r. RevealKD(id) @ #r & #r < #i)"
+
+/* L5: identity privacy. The device identity is long-lived, so it stays secret as long as
+   EVERY session of that device encapsulated to an honestly generated X-Wing key (no active
+   key substitution in any session), unless both KEM components or both AEAD components
+   are broken. One break per layer does not leak it. (A first version of this lemma that
+   quantified over a single session was falsified by Tamarin: substituting the X25519 half
+   of the key in ANOTHER session of the same device, together with an ML-KEM break, leaks
+   the identity. This is the expected passive-only identity privacy of PSK designs.) */
+lemma identity_secrecy_hedged:
+  "All id ek #i #k. DevUsedEK(id, ek) @ #i & K(id) @ #k ==>
+     (Ex ek2 #j. DevUsedEK(id, ek2) @ #j & not (Ex #g. GwGenEK(ek2) @ #g))
+   | ((Ex #a. BrokeMLKEM() @ #a) & (Ex #b. BrokeDH() @ #b))
+   | ((Ex #a. BrokeAscon() @ #a) & (Ex #b. BrokeRomulus() @ #b))"
+
+/* Helper lemmas (reused by L6/L7): each application-record key stays secret unless
+   its own cipher is broken or the device key is revealed. */
+lemma app_outer_key_secrecy [reuse]:
+  "All G id sk th3 #i #k. GwAccept(G, id, sk, th3) @ #i & K(kdf(sk, 'appOut', 'dg')) @ #k ==>
+     (Ex #b. BrokeAscon() @ #b) | (Ex #r. RevealKD(id) @ #r)"
+
+lemma app_inner_key_secrecy [reuse]:
+  "All G id sk th3 #i #k. GwAccept(G, id, sk, th3) @ #i & K(kdf(sk, 'appIn', 'dg')) @ #k ==>
+     (Ex #b. BrokeRomulus() @ #b) | (Ex #r. RevealKD(id) @ #r)"
+
+/* L6: application-record confidentiality survives one AEAD break */
+lemma record_secrecy_hedged:
+  "All id G data #i #k. DevSentData(id, G, data) @ #i & K(data) @ #k ==>
+     ((Ex #a. BrokeAscon() @ #a) & (Ex #b. BrokeRomulus() @ #b))
+   | (Ex #r. RevealKD(id) @ #r)"
+
+/* L7a / L7b: record integrity while the OUTER (Ascon) resp. INNER (Romulus) cipher is intact */
+lemma record_integrity_outer [reuse]:
+  "All G id data #i. GwRecvData(G, id, data) @ #i ==>
+     (Ex #j. DevSentData(id, G, data) @ #j & #j < #i)
+   | (Ex #a. BrokeAscon() @ #a) | (Ex #r. RevealKD(id) @ #r)"
+
+lemma record_integrity_inner [reuse]:
+  "All G id data #i. GwRecvData(G, id, data) @ #i ==>
+     (Ex #j. DevSentData(id, G, data) @ #j & #j < #i)
+   | (Ex #b. BrokeRomulus() @ #b) | (Ex #r. RevealKD(id) @ #r)"
+
+/* L7: record integrity survives one AEAD break (follows from L7a and L7b) */
+lemma record_integrity_hedged:
+  "All G id data #i. GwRecvData(G, id, data) @ #i ==>
+     (Ex #j. DevSentData(id, G, data) @ #j & #j < #i)
+   | ((Ex #a. BrokeAscon() @ #a) & (Ex #b. BrokeRomulus() @ #b))
+   | (Ex #r. RevealKD(id) @ #r)"
+
+/* ---------- sanity lemmas: each MUST be falsified, showing the break rules are
+   effective and the conditions in the lemmas above cannot be dropped ---------- */
+
+/* S1 (forward secrecy needs one intact KEM component) is in hedge_s1.spthy: as an
+   exists-trace lemma on the full model its search exhausts 8 GB of memory, so it is
+   checked on the handshake-only model restricted to a single session. */
+
+/* S2: both AEAD components broken leaks the identity even without key substitution */
+lemma sanity_identity_needs_one_aead:
+  "All id ek #i #k. DevUsedEK(id, ek) @ #i & K(id) @ #k ==>
+     (Ex ek2 #j. DevUsedEK(id, ek2) @ #j & not (Ex #g. GwGenEK(ek2) @ #g))
+   | ((Ex #a. BrokeMLKEM() @ #a) & (Ex #b. BrokeDH() @ #b))"
+
+/* S3: both AEAD components broken leaks application data */
+lemma sanity_record_needs_one_aead:
+  "All id G data #i #k. DevSentData(id, G, data) @ #i & K(data) @ #k ==>
+     (Ex #r. RevealKD(id) @ #r)"
+
+end

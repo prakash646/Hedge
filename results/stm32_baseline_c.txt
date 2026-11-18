@@ -1,0 +1,59 @@
+=== HEDGE on STM32L475VG (B-L475E-IOT01A, Cortex-M4) ===
+SYSCLK = 80000000 Hz, flash 4 WS, ART I/D-cache + prefetch on, gcc -O2
+build variant: UNHEDGED BASELINE (ML-KEM-768 + Ascon only), portable C
+self-test (X-Wing vector + full handshake): PASS
+known-answer tests (Ascon-AEAD128, Romulus-N, Ascon-Hash256): PASS
+--- record layer (64-byte message, 16-byte AD) ---
+Ascon-AEAD128 encrypt                     20089 cycles  (median of 201; min 20089, max 20108)
+Romulus-N encrypt                         67455 cycles  (median of 201; min 67455, max 67499)
+Comb.Enc                                  20203 cycles  (median of 201; min 20203, max 20238)
+Comb.Dec (valid)                          20373 cycles  (median of 201; min 20373, max 20380)
+Comb.Dec (forged, early reject)           20538 cycles  (median of 201; min 20538, max 20541)
+--- hash / KDF combiners ---
+KDF, 32-byte output                       66949 cycles  (median of 201; min 66949, max 66985)
+KDF, 96-byte output                       78129 cycles  (median of 201; min 78129, max 78161)
+H*, 1256-byte input                      462393 cycles  (median of 201; min 462393, max 462418)
+--- X-Wing (ML-KEM-768 + X25519) ---
+X-Wing KeyGen (gateway)                 1730954 cycles  (median of 21; min 1730674, max 1855784)
+X-Wing Encaps (device)                  1829610 cycles  (median of 21; min 1829610, max 1829612)
+X-Wing Decaps (gateway)                 3960719 cycles  (median of 21; min 3960719, max 3960777)
+--- full handshake ---
+Device respond (encaps + KDFs + C3)      2858062 cycles  (median of 21; min 2857766, max 2858474)
+Device finish (verify tau_G + keys)       117918 cycles  (median of 21; min 117918, max 117918)
+Gateway respond (keygen + th2)          2182341 cycles  (median of 21; min 2181888, max 2212876)
+Gateway finish (decaps + verify)        4656780 cycles  (median of 21; min 4655924, max 4906063)
+(status sink 0: 0 means every call succeeded)
+--- peak stack (stack painting) ---
+Comb.Enc 64 B                           368 bytes peak stack
+X-Wing Encaps                         17868 bytes peak stack
+Device respond                        18188 bytes peak stack
+Device finish                           928 bytes peak stack
+--- ablation: KEM layer (X-Wing = ML-KEM-768 + X25519 + SHA3-256 combiner) ---
+ML-KEM-768 KeyGen                     1717405 cycles  (median of 21; min 1717405, max 1717469)
+ML-KEM-768 Encaps                     1828536 cycles  (median of 21; min 1828536, max 1828604)
+ML-KEM-768 Decaps                     2231044 cycles  (median of 21; min 2231044, max 2231101)
+X25519 public key (fixed base)        2265337 cycles  (median of 21; min 2265337, max 2265364)
+X25519 shared secret (var. base)      2265291 cycles  (median of 21; min 2265291, max 2265335)
+--- ablation: transcript hash, 1256-byte input ---
+SHAKE256 only (32 B out)               671139 cycles  (median of 201; min 671139, max 671144)
+Ascon-Hash256 only                     455127 cycles  (median of 201; min 455127, max 455143)
+H* = SHAKE256 || Ascon-Hash256         462391 cycles  (median of 201; min 462391, max 462414)
+--- ablation: KDF, 32-byte output, 134-byte input ---
+SHAKE256 only                           68347 cycles  (median of 201; min 68347, max 68362)
+Ascon-CXOF128 only                      65167 cycles  (median of 201; min 65167, max 65187)
+KDF = SHAKE256 xor Ascon-CXOF128        66948 cycles  (median of 201; min 66948, max 66976)
+--- ablation: record layer, 64-byte message, 16-byte AD ---
+Ascon-AEAD128 decrypt only              20332 cycles  (median of 201; min 20332, max 20333)
+Romulus-N decrypt only                  68210 cycles  (median of 201; min 68202, max 68210)
+--- attribution: device respond + finish, mean of 5 runs (wrapper overhead included) ---
+device total (respond+finish)                       3002114 cycles
+  X-Wing Encaps  TOTAL          1 calls    1853462 cycles
+  X-Wing Encaps  ML-KEM-768     1 calls    1853319 cycles
+  H*             TOTAL          2 calls     867819 cycles
+  H*             Ascon          2 calls     853954 cycles
+  KDF            TOTAL          5 calls     260715 cycles
+  KDF            Ascon          5 calls     251651 cycles
+  Comb.Enc       TOTAL          1 calls      15529 cycles
+  Comb.Enc       Ascon          1 calls      15359 cycles
+(ablation sink 0)
+=== benchmark done ===

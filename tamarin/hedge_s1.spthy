@@ -1,0 +1,135 @@
+theory HEDGE_S1
+begin
+
+/*
+ * Symbolic model of the HEDGE handshake and record layer (paper Fig. 2, Table II).
+ *
+ * Primitives
+ *   - ML-KEM component : KEM with  mdec(sk, menc(k, mpk(sk))) = k
+ *   - X25519 component : Tamarin's built-in Diffie-Hellman
+ *   - X-Wing secret    : ss = h(<kM, ssX, ctX, pkX>)          (combiner of the draft)
+ *   - KDF, H*          : ideal functions kdf/3, h/1
+ *   - Comb record layer: nested authenticated encryption
+ *                        C = senc( senc(m, <kIn, n, ad>), <kOut, n, ad> )
+ *                        (outer = Ascon-AEAD128, inner = Romulus-N)
+ *
+ * Algorithm-failure ("break") rules
+ *   BreakMLKEM / BreakDH          : every ML-KEM / X25519 secret of every session leaks
+ *   BreakAscon / BreakRomulus     : for every outer / inner encryption, the complete
+ *                                   (key, nonce, AD) tuple leaks, i.e. the cipher offers
+ *                                   no protection at all. (Leaking only the key would be
+ *                                   too weak: the handshake nonce iv_hs is itself secret.)
+ * Lemmas state exactly which combination of breaks and key reveals each property tolerates.
+ *
+ * Modelling simplifications (see artifact README):
+ *   - KEM ciphertexts are matched structurally (no implicit-rejection modelling);
+ *   - the KEM uses the idealised equation above, not the binding-aware library of Dax et al.;
+ *   - KDF and hash are ideal, so KDF/hash hedging is covered by the computational proof only.
+ */
+
+builtins: diffie-hellman, symmetric-encryption, hashing
+functions: mpk/1, menc/2, mdec/2, kdf/3
+equations: mdec(sk, menc(k, mpk(sk))) = k
+
+/* ---------------- algorithm failures ---------------- */
+rule BreakMLKEM:   [] --[ BrokeMLKEM() ]->   [ !Broken('MLKEM') ]
+rule BreakDH:      [] --[ BrokeDH() ]->      [ !Broken('DH') ]
+
+rule LeakMLKEM:   [ !Broken('MLKEM'),   !MLKEMSecret(k) ] --> [ Out(k) ]
+rule LeakDH:      [ !Broken('DH'),      !DHSecret(x) ]    --> [ Out(x) ]
+
+/* ---------------- enrollment and corruption ---------------- */
+rule Enroll:
+    [ Fr(~kd), Fr(~id) ]
+  --[ Enrolled(~id, $G, ~kd), Once('enroll') ]->
+    [ !DevKey(~id, $G, ~kd), !GwKey($G, ~id, ~kd) ]
+
+rule Reveal_KD:
+    [ !DevKey(id, G, kd) ] --[ RevealKD(id) ]-> [ Out(kd) ]
+
+/* ---------------- handshake ---------------- */
+rule D1_Start:
+    [ !DevKey(id, G, kd), Fr(~nD) ]
+  --[ Once('d1') ]->
+    [ D_St1(id, G, kd, ~nD), Out(~nD) ]
+
+rule G2_Respond:
+  let ek  = <mpk(~skM), 'g'^~skX>
+      m2  = <~nG, $G, ek>
+      th2 = h(<nD, m2>)
+  in
+    [ In(nD), Fr(~nG), Fr(~skM), Fr(~skX) ]
+  --[ GwGenEK(ek), Once('g2') ]->
+    [ G_St2($G, nD, ~nG, ~skM, ~skX, th2), !DHSecret(~skX), Out(m2) ]
+
+rule D3_Encaps:
+  let m2   = <nG, gid, <pkM, pkX>>
+      th2  = h(<nD, m2>)
+      ctM  = menc(~kM, pkM)
+      ctX  = 'g'^~ex
+      ssX  = pkX^~ex
+      ss   = h(<~kM, ssX, ctX, pkX>)
+      ct   = <ctM, ctX>
+      kOut = kdf(ss, 'hsOut', th2)
+      kIn  = kdf(ss, 'hsIn',  th2)
+      iv   = kdf(ss, 'hsIv',  th2)
+      th3  = h(<th2, ct, id>)
+      ms   = kdf(<ss, kd>, 'ms', th3)
+      tauD = kdf(ms, 'finD', th3)
+      sk   = kdf(ms, 'app', <th3, tauD>)
+      c3   = senc(senc(<id, tauD>, <kIn, iv, th2>), <kOut, iv, th2>)
+  in
+    [ D_St1(id, G, kd, nD), In(m2), Fr(~kM), Fr(~ex) ]
+  --[ DevUsedEK(id, <pkM, pkX>), DevRunning(id, G, sk, th3) ]->
+    [ D_St3(id, G, ms, th3, tauD, sk),
+      !MLKEMSecret(~kM), !DHSecret(~ex),
+      Out(<ct, c3>) ]
+
+rule G4_Finish:
+  let pkX  = 'g'^skX
+      ss   = h(<kM, ctX^skX, ctX, pkX>)
+      ct   = <menc(kM, mpk(skM)), ctX>
+      kOut = kdf(ss, 'hsOut', th2)
+      kIn  = kdf(ss, 'hsIn',  th2)
+      iv   = kdf(ss, 'hsIv',  th2)
+      th3  = h(<th2, ct, id>)
+      ms   = kdf(<ss, kd>, 'ms', th3)
+      tauD = kdf(ms, 'finD', th3)
+      tauG = kdf(ms, 'finG', <th3, tauD>)
+      sk   = kdf(ms, 'app', <th3, tauD>)
+  in
+    [ G_St2(G, nD, nG, skM, skX, th2), !GwKey(G, id, kd),
+      In(<ct, senc(senc(<id, tauD>, <kIn, iv, th2>), <kOut, iv, th2>)>) ]
+  --[ GwAccept(G, id, sk, th3) ]->
+    [ G_Keys(G, id, sk), Out(tauG) ]
+
+rule D5_Finish:
+    [ D_St3(id, G, ms, th3, tauD, sk), In(kdf(ms, 'finG', <th3, tauD>)) ]
+  --[ DevAccept(id, G, sk, th3) ]->
+    [ D_Keys(id, G, sk) ]
+
+/* Single-session restriction: used ONLY to guide the search for the S1 attack trace. */
+restriction once:
+  "All x #i #j. Once(x) @ #i & Once(x) @ #j ==> #i = #j"
+
+/* ======================= lemmas ======================= */
+
+/* L1: an honest run completes (no breaks, no reveals) */
+lemma executable:
+  exists-trace
+  "Ex id G sk th3 #i #j. GwAccept(G, id, sk, th3) @ #i & DevAccept(id, G, sk, th3) @ #j
+     & not (Ex x #r. RevealKD(x) @ #r)
+     & not (Ex #b. BrokeMLKEM() @ #b) & not (Ex #b. BrokeDH() @ #b)"
+
+/* S1: forward secrecy genuinely needs one intact KEM component. Stated positively:
+   there is a run where K_D is revealed only AFTER acceptance, both KEM components are
+   broken, and the adversary learns the session key. Expected: verified (trace found). */
+lemma sanity_fs_attack_exists:
+  exists-trace
+  "Ex id G sk th3 #i #k #r #a #b.
+     DevAccept(id, G, sk, th3) @ #i & K(sk) @ #k
+   & RevealKD(id) @ #r & #i < #r
+   & not (Ex #r2. RevealKD(id) @ #r2 & #r2 < #i)
+   & BrokeMLKEM() @ #a & BrokeDH() @ #b"
+
+end

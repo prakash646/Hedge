@@ -1,0 +1,25 @@
+
+HEDGE on Ibex RV32IMC (small config), Verilator RTL simulation
+self-test (X-Wing vector + full handshake): PASS
+--- record layer (64-byte message, 16-byte AD) ---
+Ascon-AEAD128 encrypt                     14176 cycles  (median of 11)
+Romulus-N encrypt                         63259 cycles  (median of 11)
+Comb.Enc                                  86436 cycles  (median of 11)
+Comb.Dec (valid)                          87770 cycles  (median of 11)
+Comb.Dec (forged, early reject)           24126 cycles  (median of 11)
+--- hash / KDF combiners ---
+KDF, 32-byte output                      306936 cycles  (median of 11)
+KDF, 96-byte output                      189282 cycles  (median of 11)
+H*, 1256-byte input                     1589514 cycles  (median of 11)
+--- X-Wing (ML-KEM-768 + X25519) ---
+X-Wing KeyGen (gateway)                 6667204 cycles  (median of 3)
+X-Wing Encaps (device)                 10913526 cycles  (median of 3)
+X-Wing Decaps (gateway)                14093172 cycles  (median of 3)
+--- full handshake ---
+Device respond (encaps + KDFs + C3)     14866807 cycles  (median of 3)
+Device finish (verify tau_G + keys)       371032 cycles  (median of 3)
+Gateway respond (keygen + th2)          8258437 cycles  (median of 3)
+Gateway finish (decaps + verify)       16668679 cycles  (median of 3)
+(status sink 0: 0 means every call succeeded)
+--- peak stack (stack painting) ---
+Comb.Enc 64 B                          2272 bytes peak stack

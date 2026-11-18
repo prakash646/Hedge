@@ -1,0 +1,64 @@
+=== HEDGE on STM32L475VG (B-L475E-IOT01A, Cortex-M4) ===
+SYSCLK = 80000000 Hz, flash 4 WS, ART I/D-cache + prefetch on, gcc -O2
+build variant: Armv7-M assembly for Ascon and SKINNY; ML-KEM, X25519, SHA-3 portable C
+self-test (X-Wing vector + full handshake): PASS
+known-answer tests (Ascon-AEAD128, Romulus-N, Ascon-Hash256): PASS
+--- record layer (64-byte message, 16-byte AD) ---
+Ascon-AEAD128 encrypt                     14230 cycles  (median of 201; min 14230, max 14246)
+Romulus-N encrypt                         70187 cycles  (median of 201; min 70187, max 70193)
+Comb.Enc                                  91365 cycles  (median of 201; min 91365, max 91374)
+Comb.Dec (valid)                          91994 cycles  (median of 201; min 91983, max 91994)
+Comb.Dec (forged, early reject)           21205 cycles  (median of 201; min 21205, max 21214)
+--- hash / KDF combiners ---
+KDF, 32-byte output                      204592 cycles  (median of 201; min 204592, max 204604)
+KDF, 96-byte output                      151123 cycles  (median of 201; min 151123, max 151136)
+H*, 1256-byte input                     1036849 cycles  (median of 201; min 1036849, max 1036862)
+--- X-Wing (ML-KEM-768 + X25519) ---
+X-Wing KeyGen (gateway)                 4134468 cycles  (median of 21; min 4133986, max 4260055)
+X-Wing Encaps (device)                  6562935 cycles  (median of 21; min 6562935, max 6562940)
+X-Wing Decaps (gateway)                 8768909 cycles  (median of 21; min 8768909, max 8768914)
+--- full handshake ---
+Device respond (encaps + KDFs + C3)      9118270 cycles  (median of 21; min 9117776, max 9243296)
+Device finish (verify tau_G + keys)       285630 cycles  (median of 21; min 285630, max 285630)
+Gateway respond (keygen + th2)          5172053 cycles  (median of 21; min 5171435, max 5297380)
+Gateway finish (decaps + verify)       10574134 cycles  (median of 21; min 10573474, max 10825496)
+(status sink 0: 0 means every call succeeded)
+--- peak stack (stack painting) ---
+Comb.Enc 64 B                          2244 bytes peak stack
+X-Wing Encaps                         18004 bytes peak stack
+Device respond                        18356 bytes peak stack
+Device finish                          1892 bytes peak stack
+--- ablation: KEM layer (X-Wing = ML-KEM-768 + X25519 + SHA3-256 combiner) ---
+ML-KEM-768 KeyGen                     1848015 cycles  (median of 21; min 1848015, max 1848074)
+ML-KEM-768 Encaps                     1959269 cycles  (median of 21; min 1959269, max 1959337)
+ML-KEM-768 Decaps                     2362666 cycles  (median of 21; min 2362666, max 2362723)
+X25519 public key (fixed base)        2329371 cycles  (median of 21; min 2329371, max 2329401)
+X25519 shared secret (var. base)      2329320 cycles  (median of 21; min 2329320, max 2329368)
+--- ablation: transcript hash, 1256-byte input ---
+SHAKE256 only (32 B out)               671138 cycles  (median of 201; min 671138, max 671143)
+Ascon-Hash256 only                     358500 cycles  (median of 201; min 358500, max 358541)
+H* = SHAKE256 || Ascon-Hash256        1036847 cycles  (median of 201; min 1036847, max 1036858)
+--- ablation: KDF, 32-byte output, 134-byte input ---
+SHAKE256 only                           68333 cycles  (median of 201; min 68333, max 68361)
+Ascon-CXOF128 only                      65223 cycles  (median of 201; min 65223, max 65245)
+KDF = SHAKE256 xor Ascon-CXOF128       204581 cycles  (median of 201; min 204581, max 204595)
+--- ablation: record layer, 64-byte message, 16-byte AD ---
+Ascon-AEAD128 decrypt only              14222 cycles  (median of 201; min 14218, max 14222)
+Romulus-N decrypt only                  70943 cycles  (median of 201; min 70935, max 70943)
+--- attribution: device respond + finish, mean of 5 runs (wrapper overhead included) ---
+device total (respond+finish)                       9432855 cycles
+  X-Wing Encaps  TOTAL          1 calls    6587590 cycles
+  X-Wing Encaps  ML-KEM-768     1 calls    1859303 cycles
+  X-Wing Encaps  X25519         2 calls    4658618 cycles
+  X-Wing Encaps  Keccak/SHA3    7 calls      68345 cycles
+  H*             TOTAL          2 calls    1990507 cycles
+  H*             Keccak/SHA3   11 calls    1275853 cycles
+  H*             Ascon          2 calls     699150 cycles
+  KDF            TOTAL          5 calls     744807 cycles
+  KDF            Keccak/SHA3   20 calls     406114 cycles
+  KDF            Ascon          5 calls     308692 cycles
+  Comb.Enc       TOTAL          1 calls     104534 cycles
+  Comb.Enc       Ascon          1 calls      15699 cycles
+  Comb.Enc       Romulus-N      1 calls      83258 cycles
+(ablation sink 0)
+=== benchmark done ===

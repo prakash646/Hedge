@@ -1,0 +1,8 @@
+Known-answer tests
+  Ascon-AEAD128    1089 vectors
+  Romulus-N        1089 vectors
+  Ascon-Hash256    1025 vectors
+  Ascon-CXOF128    1089 vectors
+  SHA3/SHAKE          2 vectors
+  X-Wing              3 vectors
+KAT: all passed

@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "HEDGE: research artifact (code, firmware, formal models and measurements)"
+authors:
+  - family-names: Prakash
+    given-names: Mangali
+    affiliation: "Department of Computer Science and Engineering, SRM University-AP, Amaravati, India"
+    orcid: "https://orcid.org/0000-0001-8710-6163"
+version: "1.0.0"
+date-released: "2026-11-18"
+license: MIT
+repository-code: "https://github.com/prakash646/HEDGE"
+keywords:
+  - post-quantum cryptography
+  - authenticated key exchange
+  - AEAD combiner
+  - Ascon
+  - X-Wing
+  - IoT security

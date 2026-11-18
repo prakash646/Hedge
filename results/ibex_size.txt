@@ -1,0 +1,2 @@
+   text	   data	    bss	    dec	    hex	filename
+ 188803	      8	  42512	 231323	  3879b	ibex/hedge_ibex.elf

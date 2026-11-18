@@ -1,0 +1,21 @@
+HEDGE host benchmark (development reference, not the MCU results)
+--- record layer (64-byte message, 16-byte AD) ---
+Ascon-AEAD128 encrypt                       677 ns  (median of 1001)
+Romulus-N encrypt                          5491 ns  (median of 1001)
+Comb.Enc                                   7027 ns  (median of 1001)
+Comb.Dec (valid)                           6980 ns  (median of 1001)
+Comb.Dec (forged, early reject)             729 ns  (median of 1001)
+--- hash / KDF combiners ---
+KDF, 32-byte output                        5346 ns  (median of 1001)
+KDF, 96-byte output                        6033 ns  (median of 1001)
+H*, 1256-byte input                       44223 ns  (median of 1001)
+--- X-Wing (ML-KEM-768 + X25519) ---
+X-Wing KeyGen (gateway)                  150344 ns  (median of 201)
+X-Wing Encaps (device)                   265552 ns  (median of 201)
+X-Wing Decaps (gateway)                  515687 ns  (median of 201)
+--- full handshake ---
+Device respond (encaps + KDFs + C3)       599564 ns  (median of 201)
+Device finish (verify tau_G + keys)         7634 ns  (median of 201)
+Gateway respond (keygen + th2)           180110 ns  (median of 201)
+Gateway finish (decaps + verify)         380433 ns  (median of 201)
+(status sink 0: 0 means every call succeeded)

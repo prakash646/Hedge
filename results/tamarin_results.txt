@@ -1,0 +1,17 @@
+# tamarin-prover tamarin-prover 1.10.0, maude 3.5; limit 1800s per lemma
+  executable (exists-trace): verified (13 steps)   [wall 6s]
+  session_key_secrecy_device (all-traces): verified (64 steps)   [wall 14s]
+  session_key_secrecy_gateway (all-traces): verified (3141 steps)   [wall 723s]
+  agreement_gateway_to_device (all-traces): verified (11 steps)   [wall 4s]
+  agreement_device_to_gateway (all-traces): verified (2624 steps)   [wall 599s]
+  identity_secrecy_hedged (all-traces): verified (164 steps)   [wall 22s]
+  record_secrecy_hedged (all-traces): verified (52 steps)   [wall 10s]
+  sanity_identity_needs_one_aead (all-traces): falsified - found trace (13 steps)   [wall 12s]
+  sanity_record_needs_one_aead (all-traces): falsified - found trace (14 steps)   [wall 14s]
+  app_outer_key_secrecy (all-traces): verified (1286 steps)   [wall 391s]
+  app_inner_key_secrecy (all-traces): verified (1064 steps)   [wall 224s]
+  record_integrity_outer (all-traces): verified (2575 steps)   [wall 960s]
+  record_integrity_inner (all-traces): verified (3108 steps)   [wall 1229s]
+  record_integrity_hedged (all-traces): verified (13 steps)   [wall 4s]
+  sanity_fs_attack_exists (exists-trace): verified (25 steps)   [wall 14s]
+# S1 checked on hedge_s1.spthy (handshake only, single session, see file header).

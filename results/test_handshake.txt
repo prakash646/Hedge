@@ -1,0 +1,13 @@
+Handshake tests (message sizes M1..M4 = 16, 1240, 1176, 16 bytes; total 2448)
+  tamper M2 nonce               device reject   gateway reject
+  tamper M2 gateway id          device reject   gateway reject
+  tamper M2 encapsulation key   device reject   gateway reject
+  tamper M3 KEM ciphertext      device reject   gateway reject
+  tamper M3 encrypted record    device reject   gateway reject
+  tamper M4 gateway tag         device reject   gateway accept
+  wrong device key:          device reject gateway reject
+  unknown device id:         device reject gateway reject
+  MITM ek swap: attacker learns device id: yes (expected; identity privacy is passive-only)
+  MITM ek swap: gateway rejects relayed M3, device rejects forged M4
+  replayed M3 in a new session: rejected
+HANDSHAKE: all 42 checks passed

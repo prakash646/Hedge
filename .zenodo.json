@@ -1,0 +1,14 @@
+{
+  "title": "HEDGE: research artifact (code, firmware, formal models and measurements)",
+  "upload_type": "software",
+  "description": "Code, STM32 and Ibex firmware, Tamarin models, constant-time checks and raw measurement logs for the paper \"HEDGE: An Algorithm-Hedged, Sign-Less Post-Quantum Authenticated Key Exchange and Record Layer for Microcontroller-Class IoT Devices\".",
+  "creators": [
+    {
+      "name": "Prakash, Mangali",
+      "affiliation": "SRM University-AP, Amaravati, India",
+      "orcid": "0000-0001-8710-6163"
+    }
+  ],
+  "license": "MIT",
+  "keywords": ["post-quantum cryptography", "authenticated key exchange", "AEAD combiner", "Ascon", "X-Wing", "IoT security"]
+}

@@ -1,0 +1,29 @@
+
+HEDGE on Ibex RV32IMC (small config), Verilator RTL simulation
+self-test (X-Wing vector + full handshake): PASS
+--- record layer (64-byte message, 16-byte AD) ---
+Ascon-AEAD128 encrypt                     14176 cycles  (median of 11; min 14176, max 14176)
+Romulus-N encrypt                         61933 cycles  (median of 11; min 61933, max 61933)
+Comb.Enc                                  14180 cycles  (median of 11; min 14180, max 14180)
+Comb.Dec (valid)                          14584 cycles  (median of 11; min 14584, max 14584)
+Comb.Dec (forged, early reject)           15040 cycles  (median of 11; min 15040, max 15040)
+--- hash / KDF combiners ---
+KDF, 32-byte output                       47241 cycles  (median of 11; min 47241, max 47241)
+KDF, 96-byte output                       54071 cycles  (median of 11; min 54071, max 54071)
+H*, 1256-byte input                      316380 cycles  (median of 11; min 316380, max 316380)
+--- X-Wing (ML-KEM-768 + X25519) ---
+X-Wing KeyGen (gateway)                 2452893 cycles  (median of 3; min 2452784, max 2492458)
+X-Wing Encaps (device)                  2675096 cycles  (median of 3; min 2675096, max 2675096)
+X-Wing Decaps (gateway)                 5733428 cycles  (median of 3; min 5733428, max 5733428)
+--- full handshake ---
+Device respond (encaps + KDFs + C3)      3344802 cycles  (median of 3; min 3344547, max 3345302)
+Device finish (verify tau_G + keys)        84884 cycles  (median of 3; min 84884, max 84884)
+Gateway respond (keygen + th2)          2763300 cycles  (median of 3; min 2762638, max 2763549)
+Gateway finish (decaps + verify)        6465110 cycles  (median of 3; min 6143386, max 6466798)
+(status sink 0: 0 means every call succeeded)
+--- peak stack (stack painting) ---
+Comb.Enc 64 B                           316 bytes peak stack
+X-Wing Encaps                         17924 bytes peak stack
+Device respond                        18180 bytes peak stack
+Device finish                           844 bytes peak stack
+done.

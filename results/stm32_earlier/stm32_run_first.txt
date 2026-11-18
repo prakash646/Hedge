@@ -1,0 +1,130 @@
+HEDGE STM32 run started 2026-11-01 10:15:44
+Board drive: D:
+  found port: USB Serial Device (COM3)  [USB\VID_0483&PID_374B&MI_02\6&95EA3DD&0&0002]
+Serial port: COM3  (USB Serial Device (COM3))
+Flashing firmware (copy to board drive)...
+Flash copy done. Opening serial port...
+X-Wing KeyGen (gateway)                 4064595 cycles  (median of 21)
+X-Wing Encaps (device)                  6428608 cycles  (median of 21)
+X-Wing Decaps (gateway)                 8628001 cycles  (median of 21)
+--- full handshake ---
+Device respond (encaps + KDFs + C3)      9172920 cycles  (median of 21)
+Device finish (verify tau_G + keys)       284420 cycles  (median of 21)
+Gateway respond (keygen + th2)          5198199 cycles  (median of 21)
+Gateway finish (decaps + verify)       10525473 cycles  (median of 21)
+(status sink 0: 0 means every call succeeded)
+--- peak stack (stack painting) ---
+Comb.Enc 64 B                          2188 bytes peak stack
+X-Wing Encaps                         17980 bytes peak stack
+Device respond                        18292 bytes peak stack
+Device finish                          1820 bytes peak stack
+=== benchmark done ===
+
+######## FULL REPORT (repeated every ~20 s) ########
+
+=== HEDGE on STM32L475VG (B-L475E-IOT01A, Cortex-M4) ===
+SYSCLK = 80000000 Hz, flash 4 WS, ART I/D-cache + prefetch on, gcc -O2
+self-test (X-Wing vector + full handshake): PASS
+--- record layer (64-byte message, 16-byte AD) ---
+Ascon-AEAD128 encrypt                     20013 cycles  (median of 201)
+Romulus-N encrypt                         67373 cycles  (median of 201)
+Comb.Enc                                  95045 cycles  (median of 201)
+Comb.Dec (valid)                          96220 cycles  (median of 201)
+Comb.Dec (forged, early reject)           28163 cycles  (median of 201)
+--- hash / KDF combiners ---
+KDF, 32-byte output                      203971 cycles  (median of 201)
+KDF, 96-byte output                      150517 cycles  (median of 201)
+H*, 1256-byte input                     1132965 cycles  (median of 201)
+--- X-Wing (ML-KEM-768 + X25519) ---
+X-Wing KeyGen (gateway)                 4064595 cycles  (median of 21)
+X-Wing Encaps (device)                  6428608 cycles  (median of 21)
+X-Wing Decaps (gateway)                 8628001 cycles  (median of 21)
+--- full handshake ---
+Device respond (encaps + KDFs + C3)      9172920 cycles  (median of 21)
+Device finish (verify tau_G + keys)       284420 cycles  (median of 21)
+Gateway respond (keygen + th2)          5198199 cycles  (median of 21)
+Gateway finish (decaps + verify)       10525473 cycles  (median of 21)
+(status sink 0: 0 means every call succeeded)
+--- peak stack (stack painting) ---
+Comb.Enc 64 B                          2188 bytes peak stack
+X-Wing Encaps                         17980 bytes peak stack
+Device respond                        18292 bytes peak stack
+Device finish                          1820 bytes peak stack
+=== benchmark done ===
+######## ENERGY PHASE: measure current at the IDD jumper ########
+>>> [round 1] NOW RUNNING HANDSHAKES for ~10 s -- read the current now
+    [round 1] done: 87 device handshakes (respond step), avg 9210605 cycles each
+>>> [round 1] NOW IDLE for ~10 s -- read the current now
+
+######## FULL REPORT (repeated every ~20 s) ########
+
+=== HEDGE on STM32L475VG (B-L475E-IOT01A, Cortex-M4) ===
+SYSCLK = 80000000 Hz, flash 4 WS, ART I/D-cache + prefetch on, gcc -O2
+self-test (X-Wing vector + full handshake): PASS
+--- record layer (64-byte message, 16-byte AD) ---
+Ascon-AEAD128 encrypt                     20013 cycles  (median of 201)
+Romulus-N encrypt                         67373 cycles  (median of 201)
+Comb.Enc                                  95045 cycles  (median of 201)
+Comb.Dec (valid)                          96220 cycles  (median of 201)
+Comb.Dec (forged, early reject)           28163 cycles  (median of 201)
+--- hash / KDF combiners ---
+KDF, 32-byte output                      203971 cycles  (median of 201)
+KDF, 96-byte output                      150517 cycles  (median of 201)
+H*, 1256-byte input                     1132965 cycles  (median of 201)
+--- X-Wing (ML-KEM-768 + X25519) ---
+X-Wing KeyGen (gateway)                 4064595 cycles  (median of 21)
+X-Wing Encaps (device)                  6428608 cycles  (median of 21)
+X-Wing Decaps (gateway)                 8628001 cycles  (median of 21)
+--- full handshake ---
+Device respond (encaps + KDFs + C3)      9172920 cycles  (median of 21)
+Device finish (verify tau_G + keys)       284420 cycles  (median of 21)
+Gateway respond (keygen + th2)          5198199 cycles  (median of 21)
+Gateway finish (decaps + verify)       10525473 cycles  (median of 21)
+(status sink 0: 0 means every call succeeded)
+--- peak stack (stack painting) ---
+Comb.Enc 64 B                          2188 bytes peak stack
+X-Wing Encaps                         17980 bytes peak stack
+Device respond                        18292 bytes peak stack
+Device finish                          1820 bytes peak stack
+=== benchmark done ===
+######## ENERGY PHASE: measure current at the IDD jumper ########
+>>> [round 2] NOW RUNNING HANDSHAKES for ~10 s -- read the current now
+    [round 2] done: 87 device handshakes (respond step), avg 9210605 cycles each
+>>> [round 2] NOW IDLE for ~10 s -- read the current now
+
+######## FULL REPORT (repeated every ~20 s) ########
+
+=== HEDGE on STM32L475VG (B-L475E-IOT01A, Cortex-M4) ===
+SYSCLK = 80000000 Hz, flash 4 WS, ART I/D-cache + prefetch on, gcc -O2
+self-test (X-Wing vector + full handshake): PASS
+--- record layer (64-byte message, 16-byte AD) ---
+Ascon-AEAD128 encrypt                     20013 cycles  (median of 201)
+Romulus-N encrypt                         67373 cycles  (median of 201)
+Comb.Enc                                  95045 cycles  (median of 201)
+Comb.Dec (valid)                          96220 cycles  (median of 201)
+Comb.Dec (forged, early reject)           28163 cycles  (median of 201)
+--- hash / KDF combiners ---
+KDF, 32-byte output                      203971 cycles  (median of 201)
+KDF, 96-byte output                      150517 cycles  (median of 201)
+H*, 1256-byte input                     1132965 cycles  (median of 201)
+--- X-Wing (ML-KEM-768 + X25519) ---
+X-Wing KeyGen (gateway)                 4064595 cycles  (median of 21)
+X-Wing Encaps (device)                  6428608 cycles  (median of 21)
+X-Wing Decaps (gateway)                 8628001 cycles  (median of 21)
+--- full handshake ---
+Device respond (encaps + KDFs + C3)      9172920 cycles  (median of 21)
+Device finish (verify tau_G + keys)       284420 cycles  (median of 21)
+Gateway respond (keygen + th2)          5198199 cycles  (median of 21)
+Gateway finish (decaps + verify)       10525473 cycles  (median of 21)
+(status sink 0: 0 means every call succeeded)
+--- peak stack (stack painting) ---
+Comb.Enc 64 B                          2188 bytes peak stack
+X-Wing Encaps                         17980 bytes peak stack
+Device respond                        18292 bytes peak stack
+Device finish                          1820 bytes peak stack
+=== benchmark done ===
+######## ENERGY PHASE: measure current at the IDD jumper ########
+>>> [round 3] NOW RUNNING HANDSHAKES for ~10 s -- read the current now
+
+RESULT: self-test PASS
+Finished 2026-11-01 10:17:03. Output saved to the log file.
